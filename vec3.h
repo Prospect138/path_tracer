@@ -1,0 +1,129 @@
+#pragma once
+
+#include <cassert>
+#include <cmath>
+#include <cuda_runtime.h>
+#include <iostream>
+
+struct vec3
+{
+    __host__ __device__ vec3() : e_{0, 0, 0} {};
+    __host__ __device__ vec3(double e0, double e1, double e2) : e_{e0, e1, e2} {};
+
+    __host__ __device__ double x() const
+    {
+        return e_[0];
+    }
+    __host__ __device__ double y() const
+    {
+        return e_[1];
+    }
+    __host__ __device__ double z() const
+    {
+        return e_[2];
+    }
+
+    __host__ __device__ vec3 operator-() const
+    {
+        return vec3(-e_[0], -e_[1], -e_[2]);
+    }
+    __host__ __device__ double operator[](int i) const
+    {
+        assert(i >= 0 && i < 3 && "Index out of range");
+        return e_[i];
+    }
+    __host__ __device__ double &operator[](int i)
+    {
+        assert(i >= 0 && i < 3 && "Index out of range");
+        return e_[i];
+    }
+    __host__ __device__ vec3 &operator+=(const vec3 &other)
+    {
+        e_[0] += other[0];
+        e_[1] += other[1];
+        e_[2] += other[2];
+        return *this;
+    }
+    __host__ __device__ vec3 &operator*=(const int &t)
+    {
+        e_[0] *= t;
+        e_[1] *= t;
+        e_[2] *= t;
+        return *this;
+    }
+    __host__ __device__ vec3 &operator/=(const int &t)
+    {
+        return *this *= 1 / t;
+    }
+    __host__ __device__ double length_squared() const
+    {
+        return (e_[0] * e_[0] + e_[1] * e_[1] + e_[2] * e_[2]);
+    }
+    __host__ __device__ double length() const
+    {
+        return length_squared() * length_squared();
+    }
+    using point3 = vec3;
+
+    __host__ __device__ double e_[3];
+};
+
+using point3 = vec3;
+
+__host__ __device__ inline std::ostream &operator<<(std::ostream &out, const vec3 &v)
+{
+    return out << v.x() << ' ' << v.y() << ' ' << v.z();
+}
+
+__host__ __device__ inline vec3 operator+(const vec3 &u, const vec3 &v)
+{
+    return vec3(u.x() + v.x(), u.y() + v.y(), u.z() + v.z());
+}
+
+__host__ __device__ inline vec3 operator-(const vec3 &u, const vec3 &v)
+{
+    return vec3(u.x() - v.x(), u.y() - v.y(), u.z() - v.z());
+}
+
+__host__ __device__ inline vec3 operator*(const vec3 &u, const vec3 &v)
+{
+    return vec3(u.x() * v.x(), u.y() * v.y(), u.z() * v.z());
+}
+
+__host__ __device__ inline vec3 operator*(double t, const vec3 &v)
+{
+    return vec3(t * v.x(), t * v.y(), t * v.z());
+}
+
+__host__ __device__ inline vec3 operator*(const vec3 &v, double t)
+{
+    return t * v;
+}
+
+__host__ __device__ inline vec3 operator/(const vec3 &v, double t)
+{
+    return (1 / t) * v;
+}
+
+// скалярное произведение
+__host__ __device__ inline double dot_product(const vec3 &u, const vec3 &v)
+{
+    return u.x() * v.x() + u.y() * v.y() + u.z() * v.z();
+}
+
+// векторное произведение
+// i  j  k
+// x1 y1 z1
+// x2 y2 z2
+// детерминант i, j и k через алгебраическое дополнение
+__host__ __device__ inline vec3 cross(const vec3 &u, const vec3 &v)
+{
+    return vec3{(u.y() * v.z() - u.z() * v.y()), (u.x() * v.z() - u.z() * v.x()),
+                (u.x() * v.y() - u.y() * v.x())}; // conponents i, j and k
+}
+
+// единичный вектор
+__host__ __device__ inline vec3 unit_vector(const vec3 &v)
+{
+    return v / v.length();
+}
