@@ -19,6 +19,6 @@ int main()
     Renderer renderer{};
     renderer.SetSpheres(spheres, 4);
     renderer.SetLights(lights, 2);
-    renderer.DrawFrame(k_position, k_direction);
-    // renderer.StartMainLoop();
+    // renderer.DrawFrame(k_position, k_direction);
+    renderer.StartMainLoop();
 }

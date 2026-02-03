@@ -26,6 +26,7 @@ class Renderer
     void RenderSpheres();
     void SetSpheres(const Sphere *objs, size_t count);
     void SetLights(const LightSource *lights, size_t count);
+    bool InitSDL();
     ~Renderer();
 
   private:
@@ -39,6 +40,6 @@ class Renderer
     size_t _light_count{0};
     const Sphere *_spheres{nullptr};
     size_t _sphere_count{0};
-    // SDL_Window *_window{nullptr};
-    // SDL_Renderer *_renderer{nullptr};
+    SDL_Window *_window{nullptr};
+    SDL_Renderer *_renderer{nullptr};
 };

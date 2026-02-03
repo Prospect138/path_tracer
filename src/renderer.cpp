@@ -14,21 +14,21 @@ static const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
 extern __host__ cudaError_t CUDARTAPI cudaGraphicsGLRegisterBuffer(struct cudaGraphicsResource **resource,
                                                                    GLuint buffer, unsigned int flags);
 
-Renderer::Renderer()
-    : _camera(std::make_shared<Camera>(vec3{0.0, 0.0, 0.0}, point3{0.0, 0.0, 0.0})) {
-          // if (!initSDL())
-          //{
-          //     std::cerr << "Failed to initialize SDL context." << std::endl;
-          // }
-      };
+Renderer::Renderer() : _camera(std::make_shared<Camera>(vec3{0.0, 0.0, 0.0}, point3{0.0, 0.0, 0.0}))
+{
+    if (!InitSDL())
+    {
+        std::cerr << "Failed to initialize SDL context." << std::endl;
+    }
+};
 
-Renderer::Renderer(std::shared_ptr<Camera> camera)
-    : _camera(camera) {
-          // if (!initSDL())
-          //{
-          //     std::cerr << "Failed to initialize SDL context." << std::endl;
-          // }
-      };
+Renderer::Renderer(std::shared_ptr<Camera> camera) : _camera(camera)
+{
+    if (!InitSDL())
+    {
+        std::cerr << "Failed to initialize SDL context." << std::endl;
+    }
+};
 
 void Renderer::DrawFrame(const point3 &camera_position, const vec3 &camera_direction)
 {
@@ -48,28 +48,27 @@ std::shared_ptr<Camera> Renderer::getCamera()
     return _camera;
 }
 
-/*
 void Renderer::StartMainLoop()
 {
-   bool quit_ = false;
-   SDL_SetWindowMouseGrab(_window, true);
-   // SDL_SetRelativeMouseMode(true);
+    bool quit_ = false;
+    SDL_SetWindowMouseGrab(_window, true);
+    // SDL_SetRelativeMouseMode(true);
 
-   signed short int mouseDX;
-   SDL_Event event;
-   while (quit_ == false)
-   {
-       SDL_PollEvent(&event);
-       _handler.handleInput(event);
-       auto start = std::chrono::high_resolution_clock::now();
-       // LOG("rendering frame");
+    signed short int mouseDX;
+    SDL_Event event;
+    std::cout << "Entering main loop" << std::endl;
+    while (quit_ == false)
+    {
+        SDL_PollEvent(&event);
+        _handler.handleInput(event);
+        auto start = std::chrono::high_resolution_clock::now();
+        // LOG("rendering frame");
 
-       ProcessInput();
+        ProcessInput();
 
-       DrawFrame(_camera->_position, _camera->_direction, nullptr, 0);
-   }
+        DrawFrame(_camera->_position, _camera->_direction);
+    }
 }
-*/
 
 void Renderer::SetSpheres(const Sphere *objs, size_t count)
 {
@@ -108,29 +107,33 @@ void Renderer::RenderSpheres()
     launchCalculate(device_colors, _spheres, _sphere_count, _lights, _light_count, _camera->_camera_center,
                     _camera->_image_width, _camera->_image_height, pixel_du, pixel_dv, pixel_start);
 
-    // glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-
     cudaMemcpy(host_colors, device_colors, mem_size, cudaMemcpyDeviceToHost);
 
-    std::cout << "P3\n" << _camera->_image_width << ' ' << _camera->_image_height << "\n255\n";
+    // std::cout << "P3\n" << _camera->_image_width << ' ' << _camera->_image_height << "\n255\n";
 
     for (int y = 0; y < _camera->_image_height; ++y)
+    {
         for (int x = 0; x < _camera->_image_width; ++x)
         {
             color pixel_color = host_colors[y * _camera->_image_width + x];
+
             int ir = static_cast<int>(255.99 * pixel_color.x());
             int ig = static_cast<int>(255.99 * pixel_color.y());
             int ib = static_cast<int>(255.99 * pixel_color.z());
-            std::cout << ir << ' ' << ig << ' ' << ib << '\n';
-        }
+            // std::cout << ir << ' ' << ig << ' ' << ib << '\n';
+            SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 0);
 
-    // glSwapBuffersSDL(_window);
+            SDL_SetRenderDrawColor(_renderer, ir, ig, ib, 255);
+            SDL_RenderPoint(_renderer, x, y);
+        }
+    }
+    SDL_RenderPresent(_renderer);
     cudaFree(device_objs);
     cudaFree(device_colors);
     cudaFreeHost(host_colors);
 }
-/*
-bool Renderer::initSDL()
+
+bool Renderer::InitSDL()
 {
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
@@ -188,19 +191,18 @@ void Renderer::ProcessInput()
         _camera->SetDirection(rotateY(_camera->getDirection(), _handler.getMouseDelta().second * MOUSE_SENSETIVITY));
     }
 }
-*/
 
 Renderer::~Renderer()
 {
-    // if (_renderer)
-    //{
-    //     SDL_DestroyRenderer(_renderer);
-    //     _renderer = nullptr;
-    // }
-    // if (_window)
-    //{
-    //     SDL_DestroyWindow(_window);
-    //     _window = nullptr;
-    // }
+    if (_renderer)
+    {
+        SDL_DestroyRenderer(_renderer);
+        _renderer = nullptr;
+    }
+    if (_window)
+    {
+        SDL_DestroyWindow(_window);
+        _window = nullptr;
+    }
     SDL_Quit();
 }
