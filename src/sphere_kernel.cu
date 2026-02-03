@@ -12,9 +12,12 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+__device__ static double SKY_R = 0.05;
+__device__ static double SKY_G = 0.2;
+__device__ static double SKY_B = 0.65;
 __device__ static int MAX_REFLECTIONS = 5;
 
-__device__ vec3 reflectedDir(const vec3 &vector, const vec3 &normal)
+__device__ vec3 ReflectedDir(const vec3 &vector, const vec3 &normal)
 {
     return vector - normal * 2.0 * dot_product(vector, normal);
 }
@@ -80,15 +83,17 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
             for (size_t j = 0; j < l_sz; j++)
             {
                 vec3 light_direction = unit_vector(lights[j]._coordinate - best_record.p);
+                double light_distance = dist(lights[j]._coordinate, best_record.p);
                 Ray light_seeker{best_record.p, light_direction};
                 bool is_illuminated = true;
                 double cosin = angle_cos(best_record.normal, light_direction);
-                double acosin = acos(cosin);
-                double illumination_force = acosin / M_PI;
+                if (cosin < 0)
+                    cosin = 0; // Lambert's Model
+                double illumination_force = cosin;
                 for (size_t i = 0; i < o_sz; i++)
                 {
                     HitRecord dummy_record{};
-                    if (Hit(&s[i], light_seeker, 0.001, 100.0, dummy_record))
+                    if (Hit(&s[i], light_seeker, 0.001, light_distance, dummy_record))
                     {
                         is_illuminated = false;
                         break;
@@ -102,7 +107,7 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
             final_color += attenuation * local_color * (1.0 - s[hit_index]._reflectivity);
 
             // make reflected ray as current and iterate again
-            vec3 reflected_direction = reflectedDir(current_ray.direction(), best_record.normal);
+            vec3 reflected_direction = ReflectedDir(current_ray.direction(), best_record.normal);
             Ray reflected_ray(best_record.p, reflected_direction);
             current_ray = reflected_ray;
             attenuation *= s[hit_index]._reflectivity;
@@ -110,9 +115,20 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
                 break;
         }
         else if (hit_index == -1)
+        {
+            final_color += attenuation * color{SKY_R, SKY_G, SKY_B};
             break;
+        }
         depth++;
     }
+    // Gamma Correction
+    final_color[0] = sqrt(final_color.x());
+    final_color[1] = sqrt(final_color.y());
+    final_color[2] = sqrt(final_color.z());
+    // Clamping
+    final_color[0] = fminf(1.0f, fmaxf(0.0f, final_color.x()));
+    final_color[1] = fminf(1.0f, fmaxf(0.0f, final_color.y()));
+    final_color[2] = fminf(1.0f, fmaxf(0.0f, final_color.z()));
 
     return final_color;
 }

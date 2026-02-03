@@ -134,6 +134,11 @@ __host__ __device__ inline vec3 unit_vector(const vec3 &v)
     return v / v.length();
 }
 
+__host__ __device__ inline double dist(const point3 &v, const point3 &u)
+{
+    return sqrt(powf((v.x() - u.x()), 2) + powf((v.y() - u.y()), 2) + powf((v.z() - u.z()), 2));
+}
+
 __host__ vec3 inline rotateX(const vec3 &v, double angle)
 {
     double cos = std::cos(angle);

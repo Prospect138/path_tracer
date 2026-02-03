@@ -4,9 +4,9 @@
 #include "vec3.h"
 struct HitRecord
 {
-    point3 p;
+    point3 p; // coordinate
     vec3 normal;
-    double t;
+    double t; // distance to hit
     bool front_face;
     __host__ __device__ void set_face_normal(const Ray &r, const vec3 &outward_normal)
     {
