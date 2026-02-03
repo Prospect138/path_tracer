@@ -14,6 +14,8 @@ Camera::Camera(const vec3 &direction, const point3 &position) : _direction(direc
     _camera_center = point3(0, 0, 0);
     _viewport.u = vec3(viewport_width, 0, 0);
     _viewport.v = vec3(0, -viewport_height, 0);
+
+    _speed = 0.1;
 }
 
 void Camera::SetDirection(const vec3 &direction)
@@ -24,4 +26,14 @@ void Camera::SetDirection(const vec3 &direction)
 void Camera::SetPosition(const point3 &position)
 {
     _position = position;
+}
+
+vec3 Camera::getDirection() const
+{
+    return _direction;
+}
+
+point3 Camera::getPosition() const
+{
+    return _position;
 }

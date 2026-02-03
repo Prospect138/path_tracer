@@ -21,6 +21,9 @@ struct Camera
     void SetDirection(const vec3 &direction);
     void SetPosition(const point3 &position);
 
+    vec3 getDirection() const;
+    point3 getPosition() const;
+
     Viewport _viewport;
     point3 _camera_center;
     double _focal_length;
@@ -28,4 +31,6 @@ struct Camera
     int _image_height;
     vec3 _direction;
     point3 _position;
+
+    double _speed;
 };

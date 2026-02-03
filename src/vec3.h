@@ -70,7 +70,7 @@ struct vec3
 
 using point3 = vec3;
 
-__host__ __device__ inline std::ostream &operator<<(std::ostream &out, const vec3 &v)
+inline std::ostream &operator<<(std::ostream &out, const vec3 &v)
 {
     return out << v.x() << ' ' << v.y() << ' ' << v.z();
 }
@@ -126,4 +126,20 @@ __host__ __device__ inline vec3 cross(const vec3 &u, const vec3 &v)
 __host__ __device__ inline vec3 unit_vector(const vec3 &v)
 {
     return v / v.length();
+}
+
+__host__ vec3 inline rotateX(const vec3 &v, double angle)
+{
+    double cos = std::cos(angle);
+    double sin = std::sin(angle);
+    vec3 rotated_vector{v.x(), v.y() * cos - v.y() * sin, v.z() * sin + v.z() * cos};
+    return rotated_vector;
+}
+
+__host__ vec3 inline rotateY(const vec3 &v, double angle)
+{
+    double cos = std::cos(angle);
+    double sin = std::sin(angle);
+    vec3 rotated_vector{v.x() * cos + v.x() * sin, v.y(), v.z() * -sin + v.z() * cos};
+    return rotated_vector;
 }

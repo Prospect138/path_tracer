@@ -10,5 +10,5 @@
 
 __device__ bool Hit(const Sphere *s, const Ray &r, double ray_tmin, double ray_tmax, HitRecord &record);
 
-__device__ color SphereDrawPoint(const Sphere *s, const size_t size, const Ray &r);
+__device__ color SphereDrawPoint(const Sphere *s, size_t sz, const Ray &r);
 #endif
