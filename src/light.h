@@ -2,7 +2,8 @@
 
 #include "vec3.h"
 
-struct LightSource {
+struct LightSource
+{
     LightSource() = default;
     LightSource(point3 coordinate) : _coordinate(coordinate) {};
     ~LightSource() = default;

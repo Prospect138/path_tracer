@@ -8,6 +8,10 @@
 #include <cuda_runtime.h>
 #include <sys/types.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 __device__ static int MAX_REFLECTIONS = 5;
 
 __device__ vec3 reflectedDir(const vec3 &vector, const vec3 &normal)
@@ -42,7 +46,8 @@ __device__ bool Hit(const Sphere *s, const Ray &r, double ray_tmin, double ray_t
     return true;
 }
 
-__device__ color SphereDrawPoint(const Sphere *s, size_t sz, const Ray &r)
+__device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const LightSource *lights, const size_t l_sz,
+                                 const Ray &r)
 {
     Ray current_ray = r;
     color final_color(0.0, 0.0, 0.0);
@@ -53,7 +58,9 @@ __device__ color SphereDrawPoint(const Sphere *s, size_t sz, const Ray &r)
         HitRecord best_record{};
         best_record.t = 1e12;
         int hit_index = -1;
-        for (size_t i = 0; i < sz; i++)
+
+        // Find the nearest hit among all spheres
+        for (size_t i = 0; i < o_sz; i++)
         {
             HitRecord record{};
             if (Hit(&s[i], current_ray, 0.001, 100.0, record))
@@ -65,10 +72,36 @@ __device__ color SphereDrawPoint(const Sphere *s, size_t sz, const Ray &r)
                 }
             }
         }
-
+        // If found hit
         if (hit_index != -1)
         {
-            final_color += attenuation * s[hit_index]._color * (1.0 - s[hit_index]._reflectivity);
+            color local_color;
+            // Find if hit is illuminated by light source
+            for (size_t j = 0; j < l_sz; j++)
+            {
+                vec3 light_direction = unit_vector(lights[j]._coordinate - best_record.p);
+                Ray light_seeker{best_record.p, light_direction};
+                bool is_illuminated = true;
+                double cosin = angle_cos(best_record.normal, light_direction);
+                double acosin = acos(cosin);
+                double illumination_force = acosin / M_PI;
+                for (size_t i = 0; i < o_sz; i++)
+                {
+                    HitRecord dummy_record{};
+                    if (Hit(&s[i], light_seeker, 0.001, 100.0, dummy_record))
+                    {
+                        is_illuminated = false;
+                        break;
+                    }
+                }
+                if (is_illuminated)
+                {
+                    local_color += ((s[hit_index]._color * illumination_force));
+                }
+            }
+            final_color += attenuation * local_color * (1.0 - s[hit_index]._reflectivity);
+
+            // make reflected ray as current and iterate again
             vec3 reflected_direction = reflectedDir(current_ray.direction(), best_record.normal);
             Ray reflected_ray(best_record.p, reflected_direction);
             current_ray = reflected_ray;
@@ -80,5 +113,6 @@ __device__ color SphereDrawPoint(const Sphere *s, size_t sz, const Ray &r)
             break;
         depth++;
     }
+
     return final_color;
 }

@@ -12,14 +12,14 @@ pkg_check_modules(SDL3 REQUIRED sdl3)
 set(CMAKE_CUDA_ARCHITECTURES 86 87)
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-deprecated-gpu-targets")
 
-set(SOURCE_DIR src/)
+set(SRC src/)
 set(SOURCE
-    ${SOURCE_DIR}main.cpp
-    ${SOURCE_DIR}sphere_kernel.cu
-    ${SOURCE_DIR}calculate_kernel.cu
-    ${SOURCE_DIR}camera.cpp
-    ${SOURCE_DIR}renderer.cpp
-    ${SOURCE_DIR}keyboard_handler.cpp)
+    ${SRC}main.cpp
+    ${SRC}sphere_kernel.cu
+    ${SRC}calculate_kernel.cu
+    ${SRC}camera.cpp
+    ${SRC}renderer.cpp
+    ${SRC}keyboard_handler.cpp)
 
 add_executable(raytracer ${SOURCE})
 

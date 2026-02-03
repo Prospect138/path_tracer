@@ -16,25 +16,25 @@ extern __host__ cudaError_t CUDARTAPI cudaGraphicsGLRegisterBuffer(struct cudaGr
 
 Renderer::Renderer()
     : _camera(std::make_shared<Camera>(vec3{0.0, 0.0, 0.0}, point3{0.0, 0.0, 0.0})) {
-          // if (!initGL())
+          // if (!initSDL())
           //{
-          //     std::cerr << "Failed to initialize OpenGL context." << std::endl;
+          //     std::cerr << "Failed to initialize SDL context." << std::endl;
           // }
       };
 
 Renderer::Renderer(std::shared_ptr<Camera> camera)
     : _camera(camera) {
-          // if (!initGL())
+          // if (!initSDL())
           //{
-          //     std::cerr << "Failed to initialize OpenGL context." << std::endl;
+          //     std::cerr << "Failed to initialize SDL context." << std::endl;
           // }
       };
 
-void Renderer::DrawFrame(const point3 &camera_position, const vec3 &camera_direction, const Sphere *objs, size_t size)
+void Renderer::DrawFrame(const point3 &camera_position, const vec3 &camera_direction)
 {
     _camera->SetPosition(camera_position);
     _camera->SetDirection(camera_direction);
-    RenderSpheres(objs, size);
+    RenderSpheres();
 }
 
 std::shared_ptr<Camera> Renderer::setCamera(std::shared_ptr<Camera> camera)
@@ -67,17 +67,25 @@ void Renderer::StartMainLoop()
        ProcessInput();
 
        DrawFrame(_camera->_position, _camera->_direction, nullptr, 0);
-       if (SCREEN_TICKS_PER_FRAME - start.time_since_epoch().count() > 0)
-       {
-           SDL_Delay(SCREEN_TICKS_PER_FRAME - start.time_since_epoch().count());
-       }
    }
 }
 */
 
-void Renderer::RenderSpheres(const Sphere *objs, size_t obj_count)
+void Renderer::SetSpheres(const Sphere *objs, size_t count)
 {
-    size_t mem_size = _camera->_image_width * _camera->_image_height * sizeof(vec3) * obj_count;
+    _spheres = objs;
+    _sphere_count = count;
+}
+
+void Renderer::SetLights(const LightSource *lights, size_t count)
+{
+    _lights = lights;
+    _light_count = count;
+}
+
+void Renderer::RenderSpheres()
+{
+    size_t mem_size = _camera->_image_width * _camera->_image_height * sizeof(vec3) * _sphere_count;
     color *host_colors;
     cudaError(cudaMallocHost(&host_colors, mem_size));
     color *device_colors;
@@ -87,9 +95,9 @@ void Renderer::RenderSpheres(const Sphere *objs, size_t obj_count)
     cudaError(cudaMalloc(reinterpret_cast<void **>(&device_colors), mem_size));
 
     Sphere *device_objs;
-    cudaError(cudaMalloc(reinterpret_cast<void **>(&device_objs), obj_count * sizeof(Sphere)));
+    cudaError(cudaMalloc(reinterpret_cast<void **>(&device_objs), _sphere_count * sizeof(Sphere)));
 
-    cudaMemcpy(device_objs, objs, obj_count * sizeof(Sphere), cudaMemcpyHostToDevice);
+    cudaMemcpy(device_objs, _spheres, _sphere_count * sizeof(Sphere), cudaMemcpyHostToDevice);
 
     vec3 pixel_du = _camera->_viewport.u / _camera->_image_width; // длина пикселя по u
     vec3 pixel_dv = _camera->_viewport.v / _camera->_image_height;
@@ -97,8 +105,8 @@ void Renderer::RenderSpheres(const Sphere *objs, size_t obj_count)
                                  _camera->_viewport.u / 2 - _camera->_viewport.v / 2;
     point3 pixel_start = viewport_upper_left + 0.5 * (pixel_du + pixel_dv);
 
-    launchCalculate(device_colors, objs, obj_count, _camera->_camera_center, _camera->_image_width,
-                    _camera->_image_height, pixel_du, pixel_dv, pixel_start);
+    launchCalculate(device_colors, _spheres, _sphere_count, _lights, _light_count, _camera->_camera_center,
+                    _camera->_image_width, _camera->_image_height, pixel_du, pixel_dv, pixel_start);
 
     // glBindBuffer(GL_ARRAY_BUFFER, _vbo);
 
@@ -110,9 +118,9 @@ void Renderer::RenderSpheres(const Sphere *objs, size_t obj_count)
         for (int x = 0; x < _camera->_image_width; ++x)
         {
             color pixel_color = host_colors[y * _camera->_image_width + x];
-            int ir = static_cast<int>(pixel_color.x());
-            int ig = static_cast<int>(pixel_color.y());
-            int ib = static_cast<int>(pixel_color.z());
+            int ir = static_cast<int>(255.99 * pixel_color.x());
+            int ig = static_cast<int>(255.99 * pixel_color.y());
+            int ib = static_cast<int>(255.99 * pixel_color.z());
             std::cout << ir << ' ' << ig << ' ' << ib << '\n';
         }
 
@@ -121,8 +129,8 @@ void Renderer::RenderSpheres(const Sphere *objs, size_t obj_count)
     cudaFree(device_colors);
     cudaFreeHost(host_colors);
 }
-
-bool Renderer::initGL()
+/*
+bool Renderer::initSDL()
 {
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
@@ -137,32 +145,7 @@ bool Renderer::initGL()
         std::cerr << "Could not create window and renderer: " << SDL_GetError() << std::endl;
         return false;
     }
-    _glContext = SDL_GL_CreateContext(_window);
-    if (_glContext == nullptr)
-    {
-        std::cerr << "SDL_GL_CreateContext Error: " << SDL_GetError() << std::endl;
-        return false;
-    }
-    createVBO(&_vbo, &_cuda_vbo_resource, cudaGraphicsMapFlagsWriteDiscard);
     return true;
-}
-
-void Renderer::createVBO(GLuint *vbo, struct cudaGraphicsResource **vbo_res, unsigned int vbo_res_flags)
-{
-    assert(vbo);
-
-    // create buffer object
-    glGenBuffers(1, vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-
-    // initialize buffer object
-    unsigned int size = _camera->_image_width * _camera->_image_height * sizeof(double);
-    glBufferData(GL_ARRAY_BUFFER, size, 0, GL_DYNAMIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // register this buffer object with CUDA
-    cudaError(cudaGraphicsGLRegisterBuffer(vbo_res, *vbo, vbo_res_flags));
 }
 
 void Renderer::ProcessInput()
@@ -205,6 +188,8 @@ void Renderer::ProcessInput()
         _camera->SetDirection(rotateY(_camera->getDirection(), _handler.getMouseDelta().second * MOUSE_SENSETIVITY));
     }
 }
+*/
+
 Renderer::~Renderer()
 {
     // if (_renderer)

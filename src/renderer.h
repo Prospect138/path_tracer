@@ -22,8 +22,10 @@ class Renderer
     std::shared_ptr<Camera> setCamera(std::shared_ptr<Camera> camera);
     std::shared_ptr<Camera> getCamera();
     void StartMainLoop();
-    void DrawFrame(const point3 &camera_position, const vec3 &camera_direction, const Sphere *objs, size_t size);
-    void RenderSpheres(const Sphere *objs, size_t obj_count);
+    void DrawFrame(const point3 &camera_position, const vec3 &camera_direction);
+    void RenderSpheres();
+    void SetSpheres(const Sphere *objs, size_t count);
+    void SetLights(const LightSource *lights, size_t count);
     ~Renderer();
 
   private:
@@ -33,10 +35,10 @@ class Renderer
 
     KeyboardHandler _handler;
     std::shared_ptr<Camera> _camera;
-    std::vector<LightSource> _lights;
-    SDL_Window *_window{nullptr};
-    SDL_Renderer *_renderer{nullptr};
-    SDL_GLContext _glContext{nullptr};
-    GLuint _vbo;
-    struct cudaGraphicsResource *_cuda_vbo_resource;
+    const LightSource *_lights{nullptr};
+    size_t _light_count{0};
+    const Sphere *_spheres{nullptr};
+    size_t _sphere_count{0};
+    // SDL_Window *_window{nullptr};
+    // SDL_Renderer *_renderer{nullptr};
 };

@@ -53,7 +53,7 @@ struct vec3
     }
     __host__ __device__ vec3 &operator/=(const int &t)
     {
-        return *this *= 1 / t;
+        return *this *= (1.0 / t);
     }
     __host__ __device__ double length_squared() const
     {
@@ -61,7 +61,7 @@ struct vec3
     }
     __host__ __device__ double length() const
     {
-        return length_squared() * length_squared();
+        return sqrt(length_squared());
     }
     using point3 = vec3;
 
@@ -109,6 +109,12 @@ __host__ __device__ inline vec3 operator/(const vec3 &v, double t)
 __host__ __device__ inline double dot_product(const vec3 &u, const vec3 &v)
 {
     return u.x() * v.x() + u.y() * v.y() + u.z() * v.z();
+}
+
+// угол между векторами
+__host__ __device__ inline double angle_cos(const vec3 &u, const vec3 &v)
+{
+    return dot_product(u, v) / (u.length() * v.length());
 }
 
 // векторное произведение
