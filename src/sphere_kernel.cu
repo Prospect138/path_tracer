@@ -15,7 +15,7 @@
 __device__ static double SKY_R = 0.05;
 __device__ static double SKY_G = 0.2;
 __device__ static double SKY_B = 0.65;
-__device__ static int MAX_REFLECTIONS = 5;
+__device__ static int MAX_REFLECTIONS = 20;
 
 __device__ vec3 ReflectedDir(const vec3 &vector, const vec3 &normal)
 {
@@ -25,9 +25,9 @@ __device__ vec3 ReflectedDir(const vec3 &vector, const vec3 &normal)
 __device__ bool Hit(const Sphere *s, const Ray &r, double ray_tmin, double ray_tmax, HitRecord &record)
 {
     vec3 relative_center = r.origin() - s->_center;
-    vec3 normalized_dir = unit_vector(r.direction());
-    double a = dot_product(normalized_dir, normalized_dir);
-    double h = dot_product(normalized_dir, (relative_center));
+    vec3 dir = r.direction();
+    double a = dot_product(dir, dir);
+    double h = dot_product(dir, relative_center);
     double c = dot_product(relative_center, relative_center) - s->_radius * s->_radius;
     // double discriminant = b * b - 4 * a * c; //оптимизируется
     double discriminant = h * h - a * c;
@@ -49,6 +49,18 @@ __device__ bool Hit(const Sphere *s, const Ray &r, double ray_tmin, double ray_t
     return true;
 }
 
+__device__ void CorrectAndClamp(color &final_color)
+{
+    // Clamping
+    final_color[0] = fminf(1.0f, fmaxf(0.0f, final_color.x()));
+    final_color[1] = fminf(1.0f, fmaxf(0.0f, final_color.y()));
+    final_color[2] = fminf(1.0f, fmaxf(0.0f, final_color.z()));
+    // Gamma Correction
+    final_color[0] = sqrt(final_color.x());
+    final_color[1] = sqrt(final_color.y());
+    final_color[2] = sqrt(final_color.z());
+}
+
 __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const LightSource *lights, const size_t l_sz,
                                  const Ray &r)
 {
@@ -66,7 +78,7 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
         for (size_t i = 0; i < o_sz; i++)
         {
             HitRecord record{};
-            if (Hit(&s[i], current_ray, 0.001, 100.0, record))
+            if (Hit(&s[i], current_ray, 0.001, 1e9, record))
             {
                 if (best_record.t > record.t)
                 {
@@ -78,13 +90,13 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
         // If found hit
         if (hit_index != -1)
         {
-            color local_color;
+            color local_color{0.0, 0.0, 0.0};
             // Find if hit is illuminated by light source
             for (size_t j = 0; j < l_sz; j++)
             {
                 vec3 light_direction = unit_vector(lights[j]._coordinate - best_record.p);
                 double light_distance = dist(lights[j]._coordinate, best_record.p);
-                Ray light_seeker{best_record.p, light_direction};
+                Ray light_seeker{best_record.p + 0.001 * best_record.normal, light_direction};
                 bool is_illuminated = true;
                 double cosin = angle_cos(best_record.normal, light_direction);
                 if (cosin < 0)
@@ -104,31 +116,29 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
                     local_color += ((s[hit_index]._color * illumination_force));
                 }
             }
-            final_color += attenuation * local_color * (1.0 - s[hit_index]._reflectivity);
+            if (depth == 0)
+            {
+                final_color += attenuation * local_color * (1.0 - s[hit_index]._reflectivity);
+            }
 
             // make reflected ray as current and iterate again
-            vec3 reflected_direction = ReflectedDir(current_ray.direction(), best_record.normal);
-            Ray reflected_ray(best_record.p, reflected_direction);
+            vec3 reflected_direction = ReflectedDir(unit_vector(current_ray.direction()), best_record.normal);
+            Ray reflected_ray(best_record.p + 0.001 * best_record.normal, reflected_direction);
             current_ray = reflected_ray;
             attenuation *= s[hit_index]._reflectivity;
-            if (attenuation < 0.01)
-                break;
+            // if (attenuation < 0.01)
+            //     break;
         }
         else if (hit_index == -1)
         {
-            final_color += attenuation * color{SKY_R, SKY_G, SKY_B};
+            vec3 d = unit_vector(current_ray.direction());
+            double t = 0.5 * (d.y() + 1.0);
+            color sky = (1.0 - t) * color(1, 1, 1) + t * color(SKY_R, SKY_G, SKY_B);
+            final_color += attenuation * sky;
             break;
         }
         depth++;
     }
-    // Gamma Correction
-    final_color[0] = sqrt(final_color.x());
-    final_color[1] = sqrt(final_color.y());
-    final_color[2] = sqrt(final_color.z());
-    // Clamping
-    final_color[0] = fminf(1.0f, fmaxf(0.0f, final_color.x()));
-    final_color[1] = fminf(1.0f, fmaxf(0.0f, final_color.y()));
-    final_color[2] = fminf(1.0f, fmaxf(0.0f, final_color.z()));
-
+    CorrectAndClamp(final_color);
     return final_color;
 }
