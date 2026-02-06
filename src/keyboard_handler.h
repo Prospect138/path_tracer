@@ -12,6 +12,7 @@ class KeyboardHandler
 
     bool getKeyState(SDL_Scancode scancode);
     std::pair<int, int> getMouseDelta();
+    void flushMouse();
     int handleInput(SDL_Event event);
 
   private:

@@ -143,7 +143,7 @@ __host__ vec3 inline rotateX(const vec3 &v, double angle)
 {
     double cos = std::cos(angle);
     double sin = std::sin(angle);
-    vec3 rotated_vector{v.x(), v.y() * cos - v.y() * sin, v.z() * sin + v.z() * cos};
+    vec3 rotated_vector{v.x(), v.y() * cos - v.z() * sin, v.y() * sin + v.z() * cos};
     return rotated_vector;
 }
 
@@ -151,6 +151,19 @@ __host__ vec3 inline rotateY(const vec3 &v, double angle)
 {
     double cos = std::cos(angle);
     double sin = std::sin(angle);
-    vec3 rotated_vector{v.x() * cos + v.x() * sin, v.y(), v.z() * -sin + v.z() * cos};
+    vec3 rotated_vector{v.x() * cos + v.z() * sin, v.y(), v.x() * -sin + v.z() * cos};
     return rotated_vector;
+}
+
+__host__ vec3 inline rotateZ(const vec3 &v, double angle)
+{
+    double cos = std::cos(angle);
+    double sin = std::sin(angle);
+    vec3 rotated_vector{v.x() * cos - v.x() * sin, v.y() * sin + v.y() * cos, v.z()};
+    return rotated_vector;
+}
+
+__device__ inline double yaw(const double &x, const double &angle)
+{
+    return x * std::cos(angle) + x * std::sin(angle);
 }

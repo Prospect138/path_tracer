@@ -13,8 +13,8 @@ int main()
     LightSource light0{{-2.0, 5.0, -10.0}};
     LightSource light1{{2.0, -2.0, 10.0}};
 
-    const LightSource lights[] = {light0, light1};
-    const Sphere spheres[] = {sphere0, sphere1, sphere2, sphere3};
+    LightSource lights[] = {light0, light1};
+    Sphere spheres[] = {sphere0, sphere1, sphere2, sphere3};
 
     Renderer renderer{};
     renderer.SetSpheres(spheres, 4);

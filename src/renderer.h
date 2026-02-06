@@ -1,14 +1,15 @@
 #pragma once
-#include <GL/glew.h>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_scancode.h>
+#include <cstddef>
 #include <memory>
 #include <thread>
 #include <vector>
 
 #include "camera.h"
+#include "color.h"
 #include "keyboard_handler.h"
 #include "light.h"
 #include "sphere.h"
@@ -19,27 +20,41 @@ class Renderer
   public:
     Renderer();
     Renderer(std::shared_ptr<Camera> camera);
+
     std::shared_ptr<Camera> setCamera(std::shared_ptr<Camera> camera);
     std::shared_ptr<Camera> getCamera();
     void StartMainLoop();
-    void DrawFrame(const point3 &camera_position, const vec3 &camera_direction);
+    void DrawFrame();
     void RenderSpheres();
-    void SetSpheres(const Sphere *objs, size_t count);
-    void SetLights(const LightSource *lights, size_t count);
-    bool InitSDL();
+
+    void setColors();
+    void SetSpheres(Sphere *objs, size_t count);
+    void SetLights(LightSource *lights, size_t count);
+
     ~Renderer();
 
   private:
-    bool initGL();
+    bool InitSDL();
     void ProcessInput();
-    void createVBO(GLuint *vbo, struct cudaGraphicsResource **vbo_res, unsigned int vbo_res_flags);
 
-    KeyboardHandler _handler;
     std::shared_ptr<Camera> _camera;
-    const LightSource *_lights{nullptr};
+
+    color *_colours{nullptr};
+    color *_device_colours{nullptr};
+    uint32_t *_texture_buffer{nullptr};
+    size_t _color_size;
+
+    LightSource *_lights{nullptr};
+    LightSource *_device_lights{nullptr};
     size_t _light_count{0};
-    const Sphere *_spheres{nullptr};
+
+    Sphere *_spheres{nullptr};
+    Sphere *_device_spheres{nullptr};
     size_t _sphere_count{0};
+
+    bool _quit = false;
+    KeyboardHandler _handler;
     SDL_Window *_window{nullptr};
     SDL_Renderer *_renderer{nullptr};
+    SDL_Texture *_texture{nullptr};
 };

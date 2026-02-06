@@ -1,4 +1,5 @@
 #include "keyboard_handler.h"
+#include <iostream>
 
 bool KeyboardHandler::getKeyState(SDL_Scancode scancode)
 {
@@ -8,9 +9,14 @@ bool KeyboardHandler::getKeyState(SDL_Scancode scancode)
 std::pair<int, int> KeyboardHandler::getMouseDelta()
 {
     std::pair<int, int> result{_mouse_dx, _mouse_dy};
+
+    return result;
+}
+
+void KeyboardHandler::flushMouse()
+{
     _mouse_dx = 0;
     _mouse_dy = 0;
-    return result;
 }
 
 int KeyboardHandler::handleInput(SDL_Event event)
@@ -27,9 +33,11 @@ int KeyboardHandler::handleInput(SDL_Event event)
         _key_states[event.key.scancode] = false;
         break;
     case SDL_EVENT_MOUSE_MOTION:
-        // std::cerr << mouse_dx << std::endl;
-        _mouse_dx = event.motion.xrel;
-        _mouse_dy = event.motion.yrel;
+
+        _mouse_dx += event.motion.xrel;
+        // std::cerr << _mouse_dx << std::endl;
+        _mouse_dy += event.motion.yrel;
+        // std::cerr << _mouse_dy << std::endl;
         break;
     }
 

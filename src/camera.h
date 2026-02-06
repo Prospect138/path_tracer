@@ -16,21 +16,23 @@ struct Viewport
 
 struct Camera
 {
-    Camera() = default;
+    Camera();
     Camera(const vec3 &direction, const point3 &position);
+
     void SetDirection(const vec3 &direction);
     void SetPosition(const point3 &position);
+    void RecalculateCamera();
 
     vec3 getDirection() const;
     point3 getPosition() const;
 
     Viewport _viewport;
     point3 _camera_center;
+    vec3 _dir_up{0.0, 1.0, 0.0}; // Y is up;
     double _focal_length;
     int _image_width;
     int _image_height;
     vec3 _direction;
-    point3 _position;
 
     double _speed;
 };

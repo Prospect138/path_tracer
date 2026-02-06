@@ -1,3 +1,4 @@
+#include "camera.h"
 #include "hittable.h"
 #include "sphere_kernel.cuh"
 #include "vec3.h"
@@ -15,7 +16,7 @@
 __device__ static double SKY_R = 0.05;
 __device__ static double SKY_G = 0.2;
 __device__ static double SKY_B = 0.65;
-__device__ static int MAX_REFLECTIONS = 20;
+__device__ static int MAX_REFLECTIONS = 5;
 
 __device__ vec3 ReflectedDir(const vec3 &vector, const vec3 &normal)
 {

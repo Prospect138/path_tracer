@@ -1,6 +1,7 @@
 #ifndef SPHERE_KERNEL_CUH
 #define SPHERE_KERNEL_CUH
 
+#include "camera.h"
 #include "color.h"
 #include "hittable.h"
 #include "light.h"
