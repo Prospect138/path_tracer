@@ -27,7 +27,7 @@ class Renderer
     void DrawFrame();
     void RenderSpheres();
 
-    void setColors();
+    void setColorBuffer();
     void SetSpheres(Sphere *objs, size_t count);
     void SetLights(LightSource *lights, size_t count);
 

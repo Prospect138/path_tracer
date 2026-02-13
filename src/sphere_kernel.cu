@@ -13,9 +13,9 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-__device__ static double SKY_R = 0.05;
-__device__ static double SKY_G = 0.2;
-__device__ static double SKY_B = 0.65;
+__device__ static real_t SKY_R = 0.05;
+__device__ static real_t SKY_G = 0.2;
+__device__ static real_t SKY_B = 0.65;
 __device__ static int MAX_REFLECTIONS = 5;
 
 __device__ vec3 ReflectedDir(const vec3 &vector, const vec3 &normal)
@@ -23,15 +23,15 @@ __device__ vec3 ReflectedDir(const vec3 &vector, const vec3 &normal)
     return vector - normal * 2.0 * dot_product(vector, normal);
 }
 
-__device__ bool Hit(const Sphere *s, const Ray &r, double ray_tmin, double ray_tmax, HitRecord &record)
+__device__ bool Hit(const Sphere *s, const Ray &r, real_t ray_tmin, real_t ray_tmax, HitRecord &record)
 {
     vec3 relative_center = r.origin() - s->_center;
     vec3 dir = r.direction();
-    double a = dot_product(dir, dir);
-    double h = dot_product(dir, relative_center);
-    double c = dot_product(relative_center, relative_center) - s->_radius * s->_radius;
-    // double discriminant = b * b - 4 * a * c; //оптимизируется
-    double discriminant = h * h - a * c;
+    real_t a = dot_product(dir, dir);
+    real_t h = dot_product(dir, relative_center);
+    real_t c = dot_product(relative_center, relative_center) - s->_radius * s->_radius;
+    // real_t discriminant = b * b - 4 * a * c; //оптимизируется
+    real_t discriminant = h * h - a * c;
     if (discriminant < 0)
         return false;
     //(-b - std::sqrt(discriminant)) * 0.5 / a;
@@ -68,7 +68,7 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
     Ray current_ray = r;
     color final_color(0.0, 0.0, 0.0);
     int depth = 0;
-    double attenuation = 1.0;
+    real_t attenuation = 1.0;
     while (depth < MAX_REFLECTIONS)
     {
         HitRecord best_record{};
@@ -96,13 +96,13 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
             for (size_t j = 0; j < l_sz; j++)
             {
                 vec3 light_direction = unit_vector(lights[j]._coordinate - best_record.p);
-                double light_distance = dist(lights[j]._coordinate, best_record.p);
+                real_t light_distance = dist(lights[j]._coordinate, best_record.p);
                 Ray light_seeker{best_record.p + 0.001 * best_record.normal, light_direction};
                 bool is_illuminated = true;
-                double cosin = angle_cos(best_record.normal, light_direction);
+                real_t cosin = angle_cos(best_record.normal, light_direction);
                 if (cosin < 0)
                     cosin = 0; // Lambert's Model
-                double illumination_force = cosin;
+                real_t illumination_force = cosin;
                 for (size_t i = 0; i < o_sz; i++)
                 {
                     HitRecord dummy_record{};
@@ -133,7 +133,7 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
         else if (hit_index == -1)
         {
             vec3 d = unit_vector(current_ray.direction());
-            double t = 0.5 * (d.y() + 1.0);
+            real_t t = 0.5 * (d.y() + 1.0);
             color sky = (1.0 - t) * color(1, 1, 1) + t * color(SKY_R, SKY_G, SKY_B);
             final_color += attenuation * sky;
             break;

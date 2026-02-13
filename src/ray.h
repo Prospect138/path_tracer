@@ -18,7 +18,7 @@ class Ray
     }
 
     // точка на луче через линейную интерполяцию
-    __host__ __device__ point3 lerp(double t) const
+    __host__ __device__ point3 lerp(real_t t) const
     {
         return origin_ + t * direction_;
     }

@@ -6,7 +6,7 @@ struct HitRecord
 {
     point3 p; // coordinate
     vec3 normal;
-    double t; // distance to hit
+    real_t t; // distance to hit
     bool front_face;
     __host__ __device__ void set_face_normal(const Ray &r, const vec3 &outward_normal)
     {
@@ -20,7 +20,7 @@ class Hittable
 public:
     Hittable() = default;
     virtual ~Hittable() = default;
-    virtual bool Hit(const Ray& r, double ray_tmin, double ray_tmax, HitRecord&
+    virtual bool Hit(const Ray& r, real_t ray_tmin, real_t ray_tmax, HitRecord&
 record) const = 0; virtual color DrawPoint(const Ray& r) const = 0;
 };
 */

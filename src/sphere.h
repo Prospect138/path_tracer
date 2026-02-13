@@ -6,6 +6,6 @@ struct Sphere
 {
     point3 _center;
     point3 _color;
-    double _radius;
-    double _reflectivity;
+    real_t _radius;
+    real_t _reflectivity;
 };

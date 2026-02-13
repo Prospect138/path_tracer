@@ -10,21 +10,22 @@
 #include <SDL3/SDL_pixels.h>
 #include <SDL3/SDL_render.h>
 #include <cstdint>
+#include <cstdio>
 #include <cuda_gl_interop.h>
 #include <cuda_runtime_api.h>
 #include <driver_types.h>
 
-static const double MOUSE_SENSETIVITY = 0.3;
+static const real_t MOUSE_SENSETIVITY = 0.02;
 static const int SCREEN_FPS = 60;
 static const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
 
 Renderer::Renderer()
 {
-    setCamera(std::make_shared<Camera>(vec3{1.0, 0.0, 0.0}, point3{0.0, 0.0, 0.0}));
+    setCamera(std::make_shared<Camera>(vec3{0.0, 0.0, -1.0}, point3{0.0, 0.0, 0.0}));
     if (!InitSDL())
         std::cerr << "Failed to initialize SDL context." << std::endl;
 
-    setColors();
+    setColorBuffer();
 };
 
 Renderer::Renderer(std::shared_ptr<Camera> camera) : _camera(camera)
@@ -33,10 +34,10 @@ Renderer::Renderer(std::shared_ptr<Camera> camera) : _camera(camera)
     if (!InitSDL())
         std::cerr << "Failed to initialize SDL context." << std::endl;
 
-    setColors();
+    setColorBuffer();
 };
 
-void Renderer::setColors()
+void Renderer::setColorBuffer()
 {
     if (_camera)
     {
@@ -89,7 +90,6 @@ void Renderer::StartMainLoop()
         // LOG("rendering frame");
         // printf("Rendering Frame\n");
         ProcessInput();
-        _camera->RecalculateCamera();
         RenderSpheres();
     }
 }
@@ -183,51 +183,50 @@ bool Renderer::InitSDL()
 
 void Renderer::ProcessInput()
 {
+    vec3 forward = _camera->getDirection();
+    vec3 right = unit_vector(cross(forward, _camera->_dir_up)); // Вектор ВПРАВО
+    point3 pos = _camera->getPosition();
+
     if (_handler.getKeyState(SDL_SCANCODE_W))
-    {
-        _camera->SetPosition(_camera->getPosition() +
-                             unit_vector(_camera->getDirection()) * static_cast<double>(_camera->_speed));
-    }
-
+        _camera->SetPosition(pos + forward * _camera->_speed);
     if (_handler.getKeyState(SDL_SCANCODE_S))
-    {
-        _camera->SetPosition(_camera->getPosition() -
-                             unit_vector(_camera->getDirection()) * static_cast<double>(_camera->_speed));
-    }
-
-    if (_handler.getKeyState(SDL_SCANCODE_A))
-    {
-        _camera->SetPosition(_camera->getPosition() + unit_vector(cross(_camera->getDirection(), vec3{0.0, 1.0, 0.0})) *
-                                                          static_cast<double>(_camera->_speed));
-    }
-
+        _camera->SetPosition(pos - forward * _camera->_speed);
     if (_handler.getKeyState(SDL_SCANCODE_D))
-    {
-        _camera->SetPosition(_camera->getPosition() - unit_vector(cross(_camera->getDirection(), vec3{0.0, 1.0, 0.0})) *
-                                                          static_cast<double>(_camera->_speed));
-    }
+        _camera->SetPosition(pos - right * _camera->_speed);
+    if (_handler.getKeyState(SDL_SCANCODE_A))
+        _camera->SetPosition(pos + right * _camera->_speed);
 
     if (_handler.getKeyState(SDL_SCANCODE_ESCAPE))
     {
         _quit = true;
     }
 
-    if (abs(_handler.getMouseDelta().first) > 1)
+    if (abs(_handler.getMouseDxDy().first) > 1 || abs(_handler.getMouseDxDy().second) > 1)
     {
         // Gimbal Lock possible
-        double angle = _handler.getMouseDelta().second * MOUSE_SENSETIVITY;
+        real_t pitch = _handler.getMouseDxDy().first * MOUSE_SENSETIVITY;
+        real_t yaw = _handler.getMouseDxDy().second * MOUSE_SENSETIVITY;
+        vec3 currentDir = _camera->getDirection();
 
-        //_camera->SetDirection(rotateY(_camera->getDirection(), angle));
-        printf("found mouse motion around y, angle = %f\n", angle);
+        // 1. Поворот ВЛЕВО-ВПРАВО: вращаем вокруг мирового Up
+        // Отрицательный dx, чтобы мышь вправо крутила камеру вправо
+        currentDir = rotateAroundAxis(currentDir, _camera->_dir_up, pitch);
+
+        // 2. Поворот ВВЕРХ-ВНИЗ: вращаем вокруг ЛОКАЛЬНОЙ оси Right
+        // Ось Right всегда перпендикулярна взгляду и мировому Up
+        vec3 pitch_axis = unit_vector(cross(currentDir, _camera->_dir_up));
+
+        // ВАЖНО: ограничиваем угол (pitch), чтобы камера не перевернулась.
+        // В векторном виде это сложнее, чем в Эйлере, но для начала просто повернем:
+        currentDir = rotateAroundAxis(currentDir, pitch_axis, yaw);
+
+        // 3. Обновляем вектор в камере (обязательно нормализуем!)
+        _camera->SetDirection(unit_vector(currentDir));
+
+        _camera->RecalculateCamera();
+
+        _handler.flushMouse();
     }
-    if (abs(_handler.getMouseDelta().second) > 1)
-    {
-        // Gimbal Lock possible
-        double angle = _handler.getMouseDelta().second * MOUSE_SENSETIVITY;
-        _camera->SetDirection(rotateX(_camera->getDirection(), angle));
-        printf("found mouse motion aroun x,  angle = %f\n", angle);
-    }
-    _handler.flushMouse();
 }
 
 Renderer::~Renderer()
