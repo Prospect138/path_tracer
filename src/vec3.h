@@ -141,6 +141,7 @@ __host__ __device__ inline double dist(const point3 &v, const point3 &u)
 
 __host__ vec3 inline rotateX(const vec3 &v, double angle)
 {
+
     double cos = std::cos(angle);
     double sin = std::sin(angle);
     vec3 rotated_vector{v.x(), v.y() * cos - v.z() * sin, v.y() * sin + v.z() * cos};
@@ -149,6 +150,7 @@ __host__ vec3 inline rotateX(const vec3 &v, double angle)
 
 __host__ vec3 inline rotateY(const vec3 &v, double angle)
 {
+
     double cos = std::cos(angle);
     double sin = std::sin(angle);
     vec3 rotated_vector{v.x() * cos + v.z() * sin, v.y(), v.x() * -sin + v.z() * cos};
@@ -157,6 +159,7 @@ __host__ vec3 inline rotateY(const vec3 &v, double angle)
 
 __host__ vec3 inline rotateZ(const vec3 &v, double angle)
 {
+
     double cos = std::cos(angle);
     double sin = std::sin(angle);
     vec3 rotated_vector{v.x() * cos - v.x() * sin, v.y() * sin + v.y() * cos, v.z()};

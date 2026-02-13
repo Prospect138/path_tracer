@@ -52,6 +52,11 @@ void Renderer::setColors()
         std::cerr << "Failed to allocate colors - no camera found." << std::endl;
     size_t pixel_count = _camera->_image_width * _camera->_image_height;
     _texture_buffer = new uint32_t[pixel_count];
+    if (_texture_buffer == nullptr)
+    {
+        std::cerr << "Failed to allocate texture buffer." << std::endl;
+        return;
+    }
 }
 
 std::shared_ptr<Camera> Renderer::setCamera(std::shared_ptr<Camera> camera)
@@ -211,7 +216,8 @@ void Renderer::ProcessInput()
     {
         // Gimbal Lock possible
         double angle = _handler.getMouseDelta().second * MOUSE_SENSETIVITY;
-        _camera->SetDirection(rotateY(_camera->getDirection(), angle));
+
+        //_camera->SetDirection(rotateY(_camera->getDirection(), angle));
         printf("found mouse motion around y, angle = %f\n", angle);
     }
     if (abs(_handler.getMouseDelta().second) > 1)

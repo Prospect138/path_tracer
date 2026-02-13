@@ -1,5 +1,6 @@
 #pragma once
 
+#include "quaternion.h"
 #include "vec3.h"
 
 struct Viewport
@@ -23,7 +24,7 @@ struct Camera
     void SetPosition(const point3 &position);
     void RecalculateCamera();
 
-    vec3 getDirection() const;
+    Quaternion getOrientation() const;
     point3 getPosition() const;
 
     Viewport _viewport;
