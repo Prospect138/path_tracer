@@ -21,8 +21,8 @@ void Camera::RecalculateCamera()
     _image_width = 1920;
     _image_height = static_cast<int>(_image_width / aspect_ratio); // 1080
     _image_height = (_image_height < 1) ? 1 : _image_height;       // 1080
-    _focal_length = 1.0;                                           // расстояние от viewport до начала координат
-    real_t viewport_height = 2.0;                                  // высота в единицах измерения движка
+    _focal_length = -1.0;                                           // расстояние от viewport до начала координат
+    real_t viewport_height = 2.0 * _focal_length;                                  // высота в единицах измерения движка
     real_t viewport_width =
         viewport_height * static_cast<real_t>(_image_width) / static_cast<real_t>(_image_height); // 3.5555
 

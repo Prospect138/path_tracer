@@ -21,7 +21,7 @@ static const int SCREEN_TICKS_PER_FRAME = 1000 / SCREEN_FPS;
 
 Renderer::Renderer()
 {
-    setCamera(std::make_shared<Camera>(vec3{0.0, 0.0, -1.0}, point3{0.0, 0.0, 0.0}));
+    setCamera(std::make_shared<Camera>(vec3{0.0, 0.0, 1.0}, point3{0.0, 0.0, 0.0}));
     if (!InitSDL())
         std::cerr << "Failed to initialize SDL context." << std::endl;
 

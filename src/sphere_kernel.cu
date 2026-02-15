@@ -25,7 +25,7 @@ __device__ vec3 ReflectedDir(const vec3 &vector, const vec3 &normal)
 
 __device__ bool Hit(const Sphere *s, const Ray &r, real_t ray_tmin, real_t ray_tmax, HitRecord &record)
 {
-    vec3 relative_center = r.origin() - s->_center;
+    vec3 relative_center = s->_center - r.origin();
     vec3 dir = r.direction();
     real_t a = dot_product(dir, dir);
     real_t h = dot_product(dir, relative_center);
@@ -91,37 +91,7 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
         // If found hit
         if (hit_index != -1)
         {
-            color local_color{0.0, 0.0, 0.0};
-            // Find if hit is illuminated by light source
-            for (size_t j = 0; j < l_sz; j++)
-            {
-                vec3 light_direction = unit_vector(lights[j]._coordinate - best_record.p);
-                real_t light_distance = dist(lights[j]._coordinate, best_record.p);
-                Ray light_seeker{best_record.p + 0.001 * best_record.normal, light_direction};
-                bool is_illuminated = true;
-                real_t cosin = angle_cos(best_record.normal, light_direction);
-                if (cosin < 0)
-                    cosin = 0; // Lambert's Model
-                real_t illumination_force = cosin;
-                for (size_t i = 0; i < o_sz; i++)
-                {
-                    HitRecord dummy_record{};
-                    if (Hit(&s[i], light_seeker, 0.001, light_distance, dummy_record))
-                    {
-                        is_illuminated = false;
-                        break;
-                    }
-                }
-                if (is_illuminated)
-                {
-                    local_color += ((s[hit_index]._color * illumination_force));
-                }
-            }
-            if (depth == 0)
-            {
-                final_color += attenuation * local_color * (1.0 - s[hit_index]._reflectivity);
-            }
-
+            final_color += attenuation * s[hit_index]._color * (1.0 - s[hit_index]._reflectivity);
             // make reflected ray as current and iterate again
             vec3 reflected_direction = ReflectedDir(unit_vector(current_ray.direction()), best_record.normal);
             Ray reflected_ray(best_record.p + 0.001 * best_record.normal, reflected_direction);
