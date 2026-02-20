@@ -13,7 +13,7 @@
 #include "keyboard_handler.h"
 #include "light.h"
 #include "sphere.h"
-#include "vec3.h"
+#include "common/vec3.h"
 
 class Renderer
 {

@@ -1,5 +1,5 @@
 #include "camera.h"
-#include "vec3.h"
+#include "common/vec3.h"
 
 Camera::Camera()
 {

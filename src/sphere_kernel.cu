@@ -1,7 +1,7 @@
 #include "camera.h"
 #include "hittable.h"
 #include "sphere_kernel.cuh"
-#include "vec3.h"
+#include "common/vec3.h"
 
 // #include <__clang_cuda_builtin_vars.h>
 #include <cstdio>

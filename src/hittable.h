@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ray.h"
-#include "vec3.h"
+#include "common/vec3.h"
 struct HitRecord
 {
     point3 p; // coordinate

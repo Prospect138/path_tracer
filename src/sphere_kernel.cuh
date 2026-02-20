@@ -7,7 +7,7 @@
 #include "light.h"
 #include "ray.h"
 #include "sphere.h"
-#include "vec3.h"
+#include "common/vec3.h"
 #include <cstddef>
 #include <cuda_runtime.h>
 

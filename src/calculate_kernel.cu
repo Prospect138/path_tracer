@@ -6,7 +6,7 @@
 #include "camera.h"
 #include "light.h"
 #include "sphere_kernel.cuh"
-#include "vec3.h"
+#include "common/vec3.h"
 
 __global__ void calculate(color *device_colors, const Sphere *objs, const size_t o_sz, const LightSource *lights,
                           const size_t l_sz, const Camera camera)
@@ -23,9 +23,9 @@ __global__ void calculate(color *device_colors, const Sphere *objs, const size_t
     point3 viewport_upper_left = viewport_center - camera._viewport.u / 2.0 - camera._viewport.v / 2.0; // engine units
     if (x == 1 && y == 1)
     {
-        printf("viewport center   : x=%f, y=%f, z=%f\n", viewport_center.x(), viewport_center.y(), viewport_center.z());
-        printf("upper      left   : x=%f, y=%f, z=%f\n\n", viewport_upper_left.x(), viewport_upper_left.y(),
-               viewport_upper_left.z());
+        //printf("viewport center   : x=%f, y=%f, z=%f\n", viewport_center.x(), viewport_center.y(), viewport_center.z());
+        //printf("upper      left   : x=%f, y=%f, z=%f\n\n", viewport_upper_left.x(), viewport_upper_left.y(),
+        //       viewport_upper_left.z());
     }
     point3 pixel_start = viewport_upper_left + (0.5 * pixel_du) + (0.5 * pixel_dv);
     point3 pixel_center = pixel_start + (pixel_du * real_t(x)) + (pixel_dv * real_t(y)); // coordinate in engine units
@@ -42,10 +42,10 @@ extern "C" void launchCalculate(color *device_colors, const Sphere *objs, size_t
     dim3 threadBlock = {16, 16};
     dim3 grid = {(camera._image_width + threadBlock.x - 1) / threadBlock.x,
                  (camera._image_height + threadBlock.y - 1) / threadBlock.y};
-    printf("camera center     : x=%f, y=%f, z=%f\n", camera.getPosition().x(), camera.getPosition().y(),
-           camera.getPosition().z());
-    printf("camera direction  : x=%f, y=%f, z=%f\n", camera.getDirection().x(), camera.getDirection().y(),
-           camera.getDirection().z());
+    //printf("camera center     : x=%f, y=%f, z=%f\n", camera.getPosition().x(), camera.getPosition().y(),
+    //       camera.getPosition().z());
+    //printf("camera direction  : x=%f, y=%f, z=%f\n", camera.getDirection().x(), camera.getDirection().y(),
+    //       camera.getDirection().z());
     calculate<<<grid, threadBlock>>>(device_colors, objs, o_sz, lights, l_sz, camera);
 
     cudaDeviceSynchronize();

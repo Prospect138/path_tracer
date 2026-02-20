@@ -21,8 +21,10 @@ set(SOURCE
 
 add_executable(raytracer ${SOURCE})
 
-target_compile_options(raytracer PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>)
+target_compile_options(raytracer PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo--extended-lambda>)
 target_compile_features(raytracer PRIVATE cxx_std_17 cuda_std_17)
+#target_compile_options(raytracer PRIVATE -fsanitize=address)
+#target_link_options(raytracer PRIVATE -fsanitize=address)
 
 target_link_libraries(raytracer PRIVATE
     ${SDL3_LIBRARIES}

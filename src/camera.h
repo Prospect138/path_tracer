@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vec3.h"
+#include "common/vec3.h"
 
 struct Viewport
 {
