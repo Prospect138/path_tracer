@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
-project(rayctracer LANGUAGES C CXX CUDA)
+project(raytracer LANGUAGES C CXX CUDA)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+enable_testing()
+
 find_package(CUDAToolkit REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(GTest REQUIRED)
 pkg_check_modules(SDL3 REQUIRED sdl3)
 
 set(CMAKE_CUDA_ARCHITECTURES 86 87)
@@ -22,7 +25,7 @@ set(SOURCE
 add_executable(raytracer ${SOURCE})
 
 target_compile_options(raytracer PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo--extended-lambda>)
-target_compile_features(raytracer PRIVATE cxx_std_17 cuda_std_17)
+target_compile_features(raytracer PRIVATE cxx_std_20 cuda_std_20)
 #target_compile_options(raytracer PRIVATE -fsanitize=address)
 #target_link_options(raytracer PRIVATE -fsanitize=address)
 
@@ -35,5 +38,17 @@ target_include_directories(raytracer PRIVATE
     ${SDL3_INCLUDE_DIRS}
     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
+
+set(UNIT_TESTS
+    ${SRC}common/vec3.t.cpp)
+
+include(GoogleTest)
+
+add_executable(tst ${UNIT_TESTS})
+
+set_target_properties(tst PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+target_link_libraries(tst PRIVATE GTest::gtest_main CUDA::cudart)
+
+gtest_discover_tests(tst)
 
 set_target_properties(raytracer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)

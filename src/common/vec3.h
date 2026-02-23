@@ -106,6 +106,16 @@ __host__ __device__ inline vec3 operator/(const vec3 &v, real_t t)
     return (1 / t) * v;
 }
 
+__host__ __device__ inline bool operator==(const vec3 &a, const vec3 &b)
+{
+    return a.x() == b.x() && a.y() == b.y() && a.z() == b.z();
+}
+
+__host__ __device__ inline bool operator==(vec3 &a, vec3 &b)
+{
+    return a.x() == b.x() && a.y() == b.y() && a.z() == b.z();
+}
+
 // скалярное произведение
 __host__ __device__ inline real_t dot_product(const vec3 &u, const vec3 &v)
 {
@@ -123,10 +133,9 @@ __host__ __device__ inline real_t angle_cos(const vec3 &u, const vec3 &v)
 // x1 y1 z1
 // x2 y2 z2
 // детерминант i, j и k через алгебраическое дополнение
-__host__ __device__ inline vec3 cross(const vec3 &u, const vec3 &v)
+__host__ __device__ inline vec3 cross(const vec3 &a, const vec3 &b)
 {
-    return vec3(u.e_[1] * v.e_[2] - u.e_[2] * v.e_[1], u.e_[2] * v.e_[0] - u.e_[0] * v.e_[2],
-                u.e_[0] * v.e_[1] - u.e_[1] * v.e_[0]);
+    return vec3(a.y() * b.z() - a.z() * b.y(), a.z() * b.x() - a.x() * b.z(), a.x() * b.y() - a.y() * b.x());
 }
 
 // единичный вектор
