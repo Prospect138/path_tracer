@@ -13,7 +13,6 @@
 #ifdef __cplusplus
 extern "C"
 {
-
     __global__ void calculate(color *device_colors, const Sphere *obj, size_t sz, const LightSource *lights,
                               const size_t l_sz, const Camera camera);
 

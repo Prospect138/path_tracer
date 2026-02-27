@@ -4,9 +4,7 @@
 
 struct Viewport
 {
-    Viewport() : u({0.0, 0.0, 0.0}), v({0.0, 0.0, 0.0})
-    {
-    }
+    Viewport() = default;
     Viewport(vec3 u, vec3 v) : u(u), v(v)
     {
     }
@@ -14,6 +12,11 @@ struct Viewport
     vec3 u;
     // viewport up with full width length in engine units
     vec3 v;
+    point3 pixel_start;
+    real_t viewport_height;
+    real_t viewport_width;
+    vec3 pixel_du;
+    vec3 pixel_dv;
 };
 
 struct Camera
@@ -23,6 +26,7 @@ struct Camera
 
     void SetDirection(const vec3 &direction);
     void SetPosition(const point3 &position);
+    void SetViewport();
     void RecalculateCamera();
 
     vec3 getDirection() const;
@@ -35,6 +39,5 @@ struct Camera
     int _image_width;
     int _image_height;
     vec3 _direction;
-
     real_t _speed;
 };

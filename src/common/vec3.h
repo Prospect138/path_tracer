@@ -3,7 +3,9 @@
 #include <cassert>
 #include <cmath>
 #include <cuda_runtime.h>
+#include <fstream>
 #include <iostream>
+#include <ostream>
 
 typedef float real_t;
 struct vec3
@@ -55,6 +57,11 @@ struct vec3
     __host__ __device__ vec3 &operator/=(const int &t)
     {
         return *this *= (1.0 / t);
+    }
+    __host__ std::ostream& operator<<(std::ostream& stream)
+    {
+        stream << "[" << e_[0] << ", " << e_[1] << ", " << e_[2] << "]";
+        return stream;
     }
     __host__ __device__ real_t length_squared() const
     {

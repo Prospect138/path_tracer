@@ -23,32 +23,6 @@ __device__ vec3 ReflectedDir(const vec3 &vector, const vec3 &normal)
     return vector - normal * 2.0 * dot_product(vector, normal);
 }
 
-__device__ bool Hit(const Sphere *s, const Ray &r, real_t ray_tmin, real_t ray_tmax, HitRecord &record)
-{
-    vec3 relative_center = s->_center - r.origin();
-    vec3 dir = r.direction();
-    real_t a = dot_product(dir, dir);
-    real_t h = dot_product(dir, relative_center);
-    real_t c = dot_product(relative_center, relative_center) - s->_radius * s->_radius;
-    // real_t discriminant = b * b - 4 * a * c; //оптимизируется
-    real_t discriminant = h * h - a * c;
-    if (discriminant < 0)
-        return false;
-    //(-b - std::sqrt(discriminant)) * 0.5 / a;
-    auto sqrtd = std::sqrt(discriminant);
-    // Find the nearest root that lies in the acceptable range.
-    auto root = (h - sqrtd) / a;
-    if (root <= ray_tmin || ray_tmax <= root)
-    {
-        root = (h + sqrtd) / a;
-        if (root <= ray_tmin || ray_tmax <= root)
-            return false;
-    }
-    record.t = root;
-    record.p = r.lerp(record.t);
-    record.set_face_normal(r, unit_vector((record.p - s->_center) / s->_radius));
-    return true;
-}
 
 __device__ void CorrectAndClamp(color &final_color)
 {
@@ -79,7 +53,7 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
         for (size_t i = 0; i < o_sz; i++)
         {
             HitRecord record{};
-            if (Hit(&s[i], current_ray, 0.001, 1e9, record))
+            if (s[i].Hit(current_ray, 0.001, 1e9, record))
             {
                 if (best_record.t > record.t)
                 {
@@ -97,8 +71,8 @@ __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const Light
             Ray reflected_ray(best_record.p + 0.001 * best_record.normal, reflected_direction);
             current_ray = reflected_ray;
             attenuation *= s[hit_index]._reflectivity;
-            // if (attenuation < 0.01)
-            //     break;
+            if (attenuation < 0.01)
+                break;
         }
         else if (hit_index == -1)
         {

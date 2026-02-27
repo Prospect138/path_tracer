@@ -3,6 +3,14 @@ project(raytracer LANGUAGES C CXX CUDA)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 enable_testing()
 
 find_package(CUDAToolkit REQUIRED)
@@ -16,7 +24,6 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-deprecated-gpu-targets")
 set(SRC src/)
 set(SOURCE
     ${SRC}main.cpp
-    ${SRC}sphere_kernel.cu
     ${SRC}calculate_kernel.cu
     ${SRC}camera.cpp
     ${SRC}renderer.cpp

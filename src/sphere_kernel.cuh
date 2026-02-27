@@ -11,8 +11,6 @@
 #include <cstddef>
 #include <cuda_runtime.h>
 
-__device__ bool Hit(const Sphere *s, const Ray &r, real_t ray_tmin, real_t ray_tmax, HitRecord &record);
-
 __device__ color SphereDrawPoint(const Sphere *s, const size_t o_sz, const LightSource *lights, const size_t l_sz,
                                  const Ray &r);
 #endif

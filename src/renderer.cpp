@@ -134,7 +134,6 @@ void Renderer::RenderSpheres()
     cudaMemcpy(_colours, _device_colours, _color_size, cudaMemcpyDeviceToHost);
 
     // std::cout << "P3\n" << _camera->_image_width << ' ' << _camera->_image_height << "\n255\n";
-
     for (int y = 0; y < _camera->_image_height; ++y)
     {
         for (int x = 0; x < _camera->_image_width; ++x)
@@ -171,7 +170,6 @@ bool Renderer::InitSDL()
         std::cerr << "Could not create window and renderer: " << SDL_GetError() << std::endl;
         return false;
     }
-
     _texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
                                  _camera->_image_width, _camera->_image_height);
     if (_texture == nullptr)
@@ -222,8 +220,6 @@ void Renderer::ProcessInput()
 
         // 3. Обновляем вектор в камере (обязательно нормализуем!)
         _camera->SetDirection(unit_vector(currentDir));
-
-        _camera->RecalculateCamera();
 
         _handler.flushMouse();
     }
