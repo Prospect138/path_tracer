@@ -22,17 +22,25 @@ set(CMAKE_CUDA_ARCHITECTURES 86 87)
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-deprecated-gpu-targets")
 
 set(SRC src/)
-set(SOURCE
-    ${SRC}main.cpp
+
+# 1. Core Lib
+add_library(raytracer_core STATIC
     ${SRC}calculate_kernel.cu
     ${SRC}camera.cpp
     ${SRC}renderer.cpp
     ${SRC}keyboard_handler.cpp)
 
-add_executable(raytracer ${SOURCE})
+target_compile_options(raytracer_core PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo--extended-lambda>)
+target_compile_features(raytracer_core PRIVATE cxx_std_20 cuda_std_20)
 
-target_compile_options(raytracer PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo--extended-lambda>)
-target_compile_features(raytracer PRIVATE cxx_std_20 cuda_std_20)
+target_include_directories(raytracer_core PUBLIC
+    ${SRC}
+    ${SDL3_INCLUDE_DIRS}
+    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+)
+# 2. programm
+add_executable(raytracer ${SRC}main.cpp)
+
 #target_compile_options(raytracer PRIVATE -fsanitize=address)
 #target_link_options(raytracer PRIVATE -fsanitize=address)
 
@@ -40,21 +48,20 @@ target_link_libraries(raytracer PRIVATE
     ${SDL3_LIBRARIES}
     CUDA::cudart 
     CUDA::cuda_driver
-)
-target_include_directories(raytracer PRIVATE
-    ${SDL3_INCLUDE_DIRS}
-    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+    raytracer_core
 )
 
+# 3. Tests
 set(UNIT_TESTS
-    ${SRC}common/vec3.t.cpp)
+    ${SRC}common/vec3.t.cpp
+    ${SRC}camera.t.cpp)
 
 include(GoogleTest)
 
 add_executable(tst ${UNIT_TESTS})
 
 set_target_properties(tst PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-target_link_libraries(tst PRIVATE GTest::gtest_main CUDA::cudart)
+target_link_libraries(tst PRIVATE raytracer_core GTest::gtest_main CUDA::cudart)
 
 gtest_discover_tests(tst)
 

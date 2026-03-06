@@ -1,5 +1,6 @@
 #include "camera.h"
 #include "common/vec3.h"
+#include <sys/stat.h>
 
 Camera::Camera()
 {
@@ -10,31 +11,17 @@ Camera::Camera()
     RecalculateCamera();
 }
 
-Camera::Camera(const vec3 &direction, const point3 &position) : _direction(direction), _camera_center(position)
+Camera::Camera(const vec3 &direction, const point3 &position) : _camera_center(position), _direction(direction)
 {
     _speed = 0.2;
     SetViewport();
     RecalculateCamera();
+    assert(_direction.y() < 0.99);
 }
-/*
-    real_t aspect_ratio = 16.0 / 9.0; // 1.77
-    _image_width = 1920;
-    _image_height = static_cast<int>(_image_width / aspect_ratio); // 1080
-    _image_height = (_image_height < 1) ? 1 : _image_height;       // 1080
-    _focal_length = -1.0;                                           // расстояние от viewport до начала координат
-    real_t viewport_height = 2.0 * _focal_length;                                  // высота в единицах измерения движка
-    real_t viewport_width =
-        viewport_height * static_cast<real_t>(_image_width) / static_cast<real_t>(_image_height); // 3.5555
 
-    vec3 w = unit_vector(-_direction);
-    vec3 u = unit_vector(cross(_dir_up, w));
-    vec3 v = cross(w, u);
-    _viewport.u = u * viewport_width;   // 1 * 3.55555
-    _viewport.v = -v * viewport_height; // 1 * 2.0
-*/
 void Camera::SetViewport()
 {
-    real_t aspect_ratio = 16.0 / 9.0; // 1.77
+    constexpr real_t aspect_ratio = 16.0 / 9.0; // 1.77
     _image_width = 1920;
     _image_height = static_cast<int>(_image_width / aspect_ratio); // 1080
     _image_height = (_image_height < 1) ? 1 : _image_height;       // 1080
@@ -47,19 +34,11 @@ void Camera::SetViewport()
 
 void Camera::RecalculateCamera()
 {
-    
-    real_t aspect_ratio = 16.0 / 9.0; // 1.77
-    _image_width = 1920;
-    _image_height = static_cast<int>(_image_width / aspect_ratio); // 1080
-    _image_height = (_image_height < 1) ? 1 : _image_height;       // 1080
-    _focal_length = -1.0;                                           // расстояние от viewport до начала координат
-
     vec3 w = unit_vector(-_direction);
     vec3 u = unit_vector(cross(_dir_up, w));
     vec3 v = cross(w, u);
     _viewport.u = u * _viewport.viewport_width;   // 1 * 3.55555
     _viewport.v = -v * _viewport.viewport_height; // 1 * 2.0
-    // std::cout << u << " " << _viewport.viewport_width << "\n";
     _viewport.pixel_du = _viewport.u / _image_width;  // 0.00185185... engine units
     _viewport.pixel_dv = _viewport.v / _image_height; // something like 0.00185185... engine units
 
@@ -71,7 +50,7 @@ void Camera::RecalculateCamera()
 
 void Camera::SetDirection(const vec3 &direction)
 {
-    _direction = direction;
+    _direction = unit_vector(direction);
     RecalculateCamera();
 }
 
